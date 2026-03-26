@@ -1,0 +1,27 @@
+{
+  "name": "GRIND — Personal Trainer",
+  "short_name": "GRIND",
+  "description": "Your personal workout trainer. Built for where you are right now.",
+  "start_url": "/Grind/",
+  "scope": "/Grind/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#ebff00",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%230f0f0f'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-weight='900' font-size='220' fill='%23ebff00'>G</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230f0f0f'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-weight='900' font-size='220' fill='%23ebff00'>G</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "sports"],
+  "screenshots": []
+}
