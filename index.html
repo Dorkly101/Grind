@@ -687,7 +687,7 @@ const NONAV=['workout','complete','library','setup','detail'];
 let prevScreen='home';
 
 function go(id){
-  if(S&&S.startTime&&!['complete','detail'].includes(id)){
+  if(S&&S.startTime&&!['complete','detail','workout'].includes(id)){
     if(!confirm('Leave workout? Progress will be lost.'))return;
     clearTmrs();S=null;
   }
