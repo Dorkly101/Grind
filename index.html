@@ -412,7 +412,10 @@ input[type=number]{text-align:center;font-family:"Space Mono",monospace;font-siz
   </div>
   <div class="card">
     <div class="lbl mb12">Data</div>
+    <div style="font-size:12px;color:var(--m);margin-bottom:10px;line-height:1.5">Export before any app update or device change. Import to restore from a backup.</div>
     <button class="btn bg bsm mb8" onclick="exportData()">Export All Data (JSON)</button>
+    <button class="btn bg bsm mb8" onclick="document.getElementById('imp-file').click()">Import Backup (JSON)</button>
+    <input type="file" id="imp-file" accept=".json,application/json" style="display:none" onchange="importData(event)">
     <button class="btn br bsm" onclick="resetApp()">Reset Everything</button>
   </div>
 </div>
@@ -1521,6 +1524,28 @@ function advPhase(n){
 }
 function saveName(){const n=document.getElementById('setn').value.trim();if(!n){toast('Enter a name');return;}D.name=n;save();toast('Saved');}
 function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,2)],{type:'application/json'}));a.download='grind-'+new Date().toISOString().split('T')[0]+'.json';a.click();toast('Exported');}
+function importData(ev){
+  const f=ev.target.files[0];
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed||typeof parsed!=='object'||!('sess' in parsed))throw new Error('Not a GRIND backup');
+      const sCount=(parsed.sess||[]).length;
+      const name=parsed.name||'unknown';
+      if(!confirm('Import backup for "'+name+'" with '+sCount+' sessions?\n\nThis will REPLACE all current data.'))return;
+      D=migrate(parsed);
+      save();
+      toast('Restored '+sCount+' sessions');
+      setTimeout(()=>location.reload(),1200);
+    }catch(err){
+      toast('Invalid backup file');
+    }
+  };
+  reader.readAsText(f);
+  ev.target.value='';
+}
 function resetApp(){if(confirm('Delete ALL data? This cannot be undone.')){localStorage.removeItem(KEY);location.reload();}}
 
 // Exercise editors
