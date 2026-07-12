@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f0f">
+<title>GRIND Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f0f;--bg2:#181818;--bg3:#222;--b:#2a2a2a;--a:#ebff00;--r:#ff4545;--g:#45ff9a;--o:#ff9f45;--t:#f0f0f0;--m:#707070;--rr:12px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t);font-family:"DM Sans",system-ui,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+#app{max-width:430px;margin:0 auto;min-height:100vh;padding:20px 16px calc(30px + env(safe-area-inset-bottom))}
+.D{font-family:"Bebas Neue",sans-serif;letter-spacing:.04em}
+.M{font-family:"Space Mono",monospace}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--m)}
+.card{background:var(--bg2);border:1px solid var(--b);border-radius:var(--rr);padding:15px;margin-bottom:10px}
+.btn{display:flex;align-items:center;justify-content:center;padding:13px;border-radius:var(--rr);font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;border:none;width:100%;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.ba{background:var(--a);color:#000}
+.bg2{background:var(--bg3);color:var(--t);border:1px solid var(--b)}
+input,textarea,select{background:var(--bg3);border:1px solid var(--b);border-radius:9px;color:var(--t);font-family:inherit;font-size:15px;padding:11px 13px;width:100%;outline:none}
+input:focus,textarea:focus{border-color:var(--a)}
+textarea{min-height:64px;resize:vertical;line-height:1.45}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hlogo{font-family:"Bebas Neue",sans-serif;font-size:26px;letter-spacing:.06em;color:var(--a)}
+.spill{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--b);padding:6px 11px;border-radius:20px;font-family:"Space Mono",monospace;font-size:13px;font-weight:700}
+.spill.hot{border-color:rgba(255,159,69,.4)}
+.row{display:flex;gap:8px}
+.tgl{flex:1;padding:11px 4px;border-radius:9px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--b);background:var(--bg3);color:var(--m)}
+.tgl.on{background:rgba(235,255,0,.1);border-color:var(--a);color:var(--a)}
+.mood{display:flex;gap:4px}
+.md{flex:1;aspect-ratio:1;border-radius:8px;border:1px solid var(--b);background:var(--bg3);color:var(--m);display:flex;align-items:center;justify-content:center;font-family:"Space Mono",monospace;font-weight:700;font-size:13px;cursor:pointer}
+.md.on{background:var(--a);color:#000;border-color:var(--a)}
+.coach{background:linear-gradient(135deg,rgba(235,255,0,.06),rgba(235,255,0,.02));border:1px solid rgba(235,255,0,.2);border-radius:var(--rr);padding:14px;margin-bottom:10px;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.hist-item{padding:11px 0;border-bottom:1px solid var(--b)}
+.hist-item:last-child{border:none}
+.hd{font-family:"Space Mono",monospace;font-size:11px;color:var(--a);font-weight:700;margin-bottom:3px}
+.ht{font-size:13px;color:var(--t);line-height:1.4;margin-bottom:2px}
+.hm{font-size:11px;color:var(--m)}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mb8{margin-bottom:8px}
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--bg3);border:1px solid var(--b);border-radius:10px;padding:11px 16px;font-size:13px;z-index:99;transition:transform .3s;max-width:320px;text-align:center}
+.small{font-size:12px;color:var(--m);line-height:1.5}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #000;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+a{color:var(--a)}
+</style></head><body><div id="app">
+
+<div class="hdr">
+  <div class="hlogo D">CHECK-IN</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="spill" id="streak">&#128293; 0</div>
+    <div class="spill" style="cursor:pointer" onclick="togglePanel('settings')">&#9881;</div>
+  </div>
+</div>
+
+<div id="settings" class="card" style="display:none">
+  <div class="lbl mb8" style="display:block">Anthropic API Key (optional — enables coach replies)</div>
+  <input type="password" id="apikey" placeholder="sk-ant-...">
+  <div class="small mt8">Get one at console.anthropic.com &rarr; API Keys. Stored only on this phone. Without it, the app still logs everything — you just paste your week into Claude chat for review.</div>
+  <button class="btn bg2 mt12" style="padding:9px" onclick="saveKey()">Save Key</button>
+  <button class="btn bg2 mt8" style="padding:9px" onclick="exportAll()">Export All Data (JSON)</button>
+</div>
+
+<div class="card" id="today-card">
+  <div class="lbl mb8" style="display:block">Today — <span id="tdate" class="M" style="color:var(--a)"></span></div>
+  <div class="lbl mb8" style="display:block;color:var(--t)">Yesterday: what actually happened?</div>
+  <textarea id="f-yesterday" placeholder="Trained / skipped, what I ate, how I slept..."></textarea>
+  <div class="lbl mb8 mt12" style="display:block;color:var(--t)">Today: the ONE thing I commit to</div>
+  <textarea id="f-today" placeholder="One thing. Small counts." style="min-height:48px"></textarea>
+  <div class="row mt12">
+    <div class="tgl" id="t-train" onclick="tg('t-train')">Trained &#128170;</div>
+    <div class="tgl" id="t-read" onclick="tg('t-read')">Read &#128214;</div>
+    <div class="tgl" id="t-smoke" onclick="tg('t-smoke')">Smoked &#128683;</div>
+  </div>
+  <div class="lbl mb8 mt12" style="display:block">Sleep (hrs)</div>
+  <input type="number" id="f-sleep" inputmode="decimal" step="0.5" min="0" max="14" placeholder="7">
+  <div class="lbl mb8 mt12" style="display:block">Mood</div>
+  <div class="mood" id="moodrow"></div>
+  <button class="btn ba mt12" id="submitbtn" onclick="submitCheckin()">Log Check-In</button>
+</div>
+
+<div id="coachbox" style="display:none" class="coach"></div>
+
+<div class="card">
+  <div class="lbl mb8" style="display:block">Log a Meal</div>
+  <input type="file" id="mealpic" accept="image/*" capture="environment" style="display:none" onchange="mealPicked(event)">
+  <div id="mealprev" style="display:none;margin-bottom:10px"><img id="mealimg" style="width:100%;border-radius:9px;border:1px solid var(--b)"></div>
+  <button class="btn bg2 mb8" style="padding:10px" onclick="document.getElementById('mealpic').click()">&#128247; Take / Pick Photo</button>
+  <input type="text" id="mealnote" placeholder="What is it? (e.g. fish + beetroot + mushroom curry)">
+  <div class="row mt8">
+    <select id="mealtype" style="flex:1">
+      <option>Breakfast</option><option>Lunch</option><option>Snack</option><option>Dinner</option><option>Shake</option>
+    </select>
+    <button class="btn ba" style="flex:1;padding:10px" onclick="saveMeal()">Save Meal</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl mb8" style="display:block">Log an Activity</div>
+  <input type="file" id="actpic" accept="image/*" multiple style="display:none" onchange="actPicked(event)">
+  <div id="actprev" style="display:none;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
+  <button class="btn bg2 mb8" style="padding:10px" onclick="document.getElementById('actpic').click()">&#128247; Add Photo(s)</button>
+  <input type="text" id="actnote" placeholder="What did you do? (e.g. 1hr cycling, evening walk)">
+  <div class="row mt8">
+    <select id="acttype" style="flex:1">
+      <option>Cycling</option><option>Swimming</option><option>Walk</option><option>Gym</option><option>Hike</option><option>Other</option>
+    </select>
+    <button class="btn ba" style="flex:1;padding:10px" onclick="saveAct()">Save Activity</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl mb8" style="display:block">Today&rsquo;s Activities</div>
+  <div id="actlist"></div>
+</div>
+
+<div class="card">
+  <div class="lbl mb8" style="display:block">Today&rsquo;s Meals</div>
+  <div id="meallist"></div>
+</div>
+
+<div class="card">
+  <div class="lbl mb8" style="display:block">History</div>
+  <div id="hist"></div>
+</div>
+
+<div id="toast"></div>
+</div>
+<script>
+const KEY='grind_checkin_v1';
+let D=null,mood=0;
+function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):{entries:[],key:''};}catch{return{entries:[],key:''};}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch{}}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function toast(m){const el=document.getElementById('toast');el.textContent=m;el.style.transform='translateX(-50%) translateY(0)';setTimeout(()=>el.style.transform='translateX(-50%) translateY(-70px)',2600);}
+function tg(id){document.getElementById(id).classList.toggle('on');}
+function togglePanel(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function saveKey(){D.key=document.getElementById('apikey').value.trim();save();toast(D.key?'Key saved':'Key cleared');}
+function exportAll(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D.entries,null,2)],{type:'application/json'}));a.download='checkin-'+todayStr()+'.json';a.click();}
+
+function calcStreak(){
+  if(!D.entries.length)return 0;
+  let s=0;const today=new Date();today.setHours(0,0,0,0);
+  const dates=new Set(D.entries.map(e=>e.date));
+  for(let i=0;;i++){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    if(dates.has(ds))s++;
+    else{if(i===0)continue;break;}
+  }
+  return s;
+}
+
+function refresh(){
+  document.getElementById('tdate').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  const st=calcStreak();
+  const sp=document.getElementById('streak');
+  sp.innerHTML='&#128293; '+st;
+  if(st>=3)sp.classList.add('hot');
+  document.getElementById('apikey').value=D.key||'';
+  const done=D.entries.some(e=>e.date===todayStr());
+  document.getElementById('submitbtn').textContent=done?'Update Today\u2019s Check-In':'Log Check-In';
+  const h=document.getElementById('hist');
+  const rec=[...D.entries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
+  h.innerHTML=rec.length?rec.map(e=>{
+    const flags=[e.trained?'&#128170;':'',e.read?'&#128214;':'',e.smoked?'&#128683;':''].filter(Boolean).join(' ');
+    return '<div class="hist-item"><div class="hd">'+e.date+' '+flags+'</div><div class="ht">'+esc(e.yesterday)+'</div><div class="ht" style="color:var(--a)">&rarr; '+esc(e.today)+'</div><div class="hm">Sleep '+(e.sleep||'?')+'h \u00b7 Mood '+(e.mood||'?')+'/10</div>'+(e.coach?'<div class="hm mt8" style="color:var(--t);opacity:.75">Coach: '+esc(e.coach)+'</div>':'')+'</div>';
+  }).join(''):'<div class="small">No check-ins yet. Day 1 starts now.</div>';
+}
+function esc(s){return (s||'').replace(/</g,'&lt;');}
+
+let pendingActImgs=[];
+function shrinkImage(file,cb){
+  const img=new Image();
+  img.onload=function(){
+    const MAX=700;
+    let w=img.width,h=img.height;
+    if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+    else if(h>=w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    cb(cv.toDataURL('image/jpeg',0.6));
+  };
+  img.src=URL.createObjectURL(file);
+}
+function actPicked(ev){
+  const files=[...ev.target.files].slice(0,4);
+  files.forEach(f=>shrinkImage(f,data=>{
+    pendingActImgs.push(data);
+    renderActPrev();
+  }));
+  ev.target.value='';
+}
+function renderActPrev(){
+  const el=document.getElementById('actprev');
+  el.style.display=pendingActImgs.length?'flex':'none';
+  el.innerHTML=pendingActImgs.map((d,i)=>'<img src="'+d+'" style="width:31%;border-radius:8px;border:1px solid var(--b)" onclick="pendingActImgs.splice('+i+',1);renderActPrev()">').join('');
+}
+function saveAct(){
+  const note=document.getElementById('actnote').value.trim();
+  if(!pendingActImgs.length&&!note){toast('Add a photo or a note');return;}
+  if(!D.acts)D.acts=[];
+  D.acts.push({dt:new Date().toISOString(),type:document.getElementById('acttype').value,note:note,imgs:pendingActImgs.slice()});
+  while(D.acts.length>30)D.acts.shift();
+  try{save();}catch(e){
+    let guard=0;
+    while(guard<30){
+      const withImg=D.acts.find(a=>a.imgs&&a.imgs.length);
+      if(!withImg)break;
+      withImg.imgs=[];guard++;
+      try{save();break;}catch(e2){}
+    }
+  }
+  pendingActImgs=[];renderActPrev();
+  document.getElementById('actnote').value='';
+  toast('Activity logged \u2713');
+  renderActs();
+}
+function delAct(dt){
+  if(!confirm('Delete this activity?'))return;
+  D.acts=(D.acts||[]).filter(a=>a.dt!==dt);
+  save();renderActs();
+}
+function renderActs(){
+  const el=document.getElementById('actlist');
+  const today=todayStr();
+  const todays=(D.acts||[]).filter(a=>a.dt.startsWith(today));
+  el.innerHTML=todays.length?todays.map(a=>{
+    const t=new Date(a.dt).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+    const imgs=(a.imgs||[]).map(d=>'<img src="'+d+'" style="width:31%;border-radius:8px;border:1px solid var(--b);margin:2px">').join('');
+    return '<div class="hist-item"><div class="hd">'+a.type+' \u00b7 '+t+' <span style="float:right;color:var(--r);cursor:pointer" onclick="delAct(\''+a.dt+'\')">\u00d7</span></div>'+(imgs?'<div style="margin:6px 0">'+imgs+'</div>':'')+'<div class="ht">'+esc(a.note)+'</div></div>';
+  }).join(''):'<div class="small">Nothing logged today.</div>';
+}
+
+let pendingImg=null;
+function mealPicked(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const img=new Image();
+  img.onload=function(){
+    const MAX=700;
+    let w=img.width,h=img.height;
+    if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+    else if(h>=w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    pendingImg=cv.toDataURL('image/jpeg',0.65);
+    document.getElementById('mealimg').src=pendingImg;
+    document.getElementById('mealprev').style.display='block';
+  };
+  img.src=URL.createObjectURL(f);
+  ev.target.value='';
+}
+function saveMeal(){
+  const note=document.getElementById('mealnote').value.trim();
+  if(!pendingImg&&!note){toast('Add a photo or a note');return;}
+  if(!D.meals)D.meals=[];
+  D.meals.push({dt:new Date().toISOString(),type:document.getElementById('mealtype').value,note:note,img:pendingImg||''});
+  while(D.meals.length>40)D.meals.shift();
+  try{save();}catch(e){
+    // storage full: drop oldest images until it fits
+    let guard=0;
+    while(guard<40){
+      const withImg=D.meals.find(m=>m.img);
+      if(!withImg)break;
+      withImg.img='';guard++;
+      try{save();break;}catch(e2){}
+    }
+  }
+  pendingImg=null;
+  document.getElementById('mealprev').style.display='none';
+  document.getElementById('mealnote').value='';
+  toast('Meal logged \u2713');
+  renderMeals();
+}
+function delMeal(dt){
+  if(!confirm('Delete this meal?'))return;
+  D.meals=(D.meals||[]).filter(m=>m.dt!==dt);
+  save();renderMeals();
+}
+function renderMeals(){
+  const el=document.getElementById('meallist');
+  const today=todayStr();
+  const todays=(D.meals||[]).filter(m=>m.dt.startsWith(today));
+  el.innerHTML=todays.length?todays.map(m=>{
+    const t=new Date(m.dt).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+    return '<div class="hist-item"><div class="hd">'+m.type+' \u00b7 '+t+' <span style="float:right;color:var(--r);cursor:pointer" onclick="delMeal(\''+m.dt+'\')">\u00d7</span></div>'+(m.img?'<img src="'+m.img+'" style="width:100%;border-radius:8px;margin:6px 0;border:1px solid var(--b)">':'')+'<div class="ht">'+esc(m.note)+'</div></div>';
+  }).join(''):'<div class="small">Nothing logged today.</div>';
+}
+
+async function submitCheckin(){
+  const y=document.getElementById('f-yesterday').value.trim();
+  const t=document.getElementById('f-today').value.trim();
+  if(!y&&!t){toast('Write at least one line');return;}
+  const entry={
+    date:todayStr(),
+    yesterday:y,today:t,
+    trained:document.getElementById('t-train').classList.contains('on'),
+    read:document.getElementById('t-read').classList.contains('on'),
+    smoked:document.getElementById('t-smoke').classList.contains('on'),
+    sleep:parseFloat(document.getElementById('f-sleep').value)||null,
+    mood:mood||null,coach:''
+  };
+  D.entries=D.entries.filter(e=>e.date!==entry.date);
+  D.entries.push(entry);save();refresh();
+  toast('Logged \u2713');
+  if(D.key)await getCoach(entry);
+}
+
+async function getCoach(entry){
+  const box=document.getElementById('coachbox');
+  box.style.display='block';box.innerHTML='<span class="spin"></span>Coach is reading...';
+  const recent=[...D.entries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).reverse();
+  const hist=recent.map(e=>e.date+': y=['+e.yesterday+'] commit=['+e.today+'] trained='+e.trained+' read='+e.read+' smoked='+e.smoked+' sleep='+e.sleep+' mood='+e.mood).join('\n');
+  const todayMeals=(D.meals||[]).filter(m=>m.dt.startsWith(todayStr())).map(m=>m.type+': '+(m.note||'photo only')).join('; ')||'none logged';
+  const todayActs=(D.acts||[]).filter(a=>a.dt.startsWith(todayStr())).map(a=>a.type+': '+(a.note||'photo only')).join('; ')||'none logged';
+  const sys='You are Dhruv\u2019s accountability coach. He is 35, in Dehradun, rebuilding fitness (swim/cycle/home gym), quit smoking recently (relapse risk when stressed), has lower-back nerve sensitivity (no loaded hinges/overhead), history of panic attacks, tends to under-eat and spiral into shame after missed days. His rules: never miss twice; reporting bad days is a win; small shows count; protein 130-140g; no fasted training. Respond to today\u2019s check-in in under 80 words. Be direct, warm, zero fluff. Call out patterns across the week honestly (skips, smoking, low sleep) without shaming. If he smoked or mood <=4, address that first, gently. One concrete instruction for today max.';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':D.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,system:sys,messages:[{role:'user',content:'Last 7 days:\n'+hist+'\n\nToday\u2019s meals so far: '+todayMeals+'\nToday\u2019s activities: '+todayActs+'\n\nToday\u2019s check-in is the last entry. Respond.'}]})
+    });
+    const data=await r.json();
+    const txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+    if(!txt)throw new Error('empty');
+    box.textContent=txt;
+    const e=D.entries.find(x=>x.date===entry.date);
+    if(e){e.coach=txt;save();refresh();}
+  }catch(err){
+    box.textContent='Coach reply failed (check API key / internet). Your check-in is still logged.';
+  }
+}
+
+(function(){
+  D=load();
+  const mr=document.getElementById('moodrow');
+  for(let i=1;i<=10;i++){
+    const d=document.createElement('div');d.className='md';d.textContent=i;
+    d.onclick=()=>{mood=i;document.querySelectorAll('.md').forEach(x=>x.classList.remove('on'));d.classList.add('on');};
+    mr.appendChild(d);
+  }
+  const t=D.entries.find(e=>e.date===todayStr());
+  if(t){
+    document.getElementById('f-yesterday').value=t.yesterday||'';
+    document.getElementById('f-today').value=t.today||'';
+    if(t.trained)document.getElementById('t-train').classList.add('on');
+    if(t.read)document.getElementById('t-read').classList.add('on');
+    if(t.smoked)document.getElementById('t-smoke').classList.add('on');
+    if(t.sleep)document.getElementById('f-sleep').value=t.sleep;
+    if(t.mood){mood=t.mood;const mds=document.querySelectorAll('.md');if(mds[t.mood-1])mds[t.mood-1].classList.add('on');}
+  }
+  refresh();
+  renderMeals();
+  renderActs();
+})();
+</script></body></html>
