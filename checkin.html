@@ -4,6 +4,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f0f0f">
+<link rel="manifest" href="checkin.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>GRIND Check-In</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
@@ -353,5 +355,8 @@ async function getCoach(entry){
   refresh();
   renderMeals();
   renderActs();
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+  }
 })();
 </script></body></html>
